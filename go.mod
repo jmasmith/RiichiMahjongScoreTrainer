@@ -1,3 +1,3 @@
-module sample-app
+module RiichiMahjongScoreTrainer
 
 go 1.24.1

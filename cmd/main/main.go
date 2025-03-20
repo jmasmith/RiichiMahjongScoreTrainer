@@ -29,7 +29,6 @@ Yaku compatibility:
 	houtei       -> NO: ippatsu, menzen tsumo, rinshan, haitei, chankan; open/closed
 	chankan      -> NO: double riichi, menzen tsumo, toitoi, 2-iipeikou, honroutou, chiitoi, rinshan, haitei, houtei; open/closed
 
-
 	HONOR TILE SHORTHAND
 		1z, 2z, 3z, 4z -> East, South, West, North
 		5z, 6z, 7z -> White, Green, Red
@@ -38,28 +37,17 @@ Yaku compatibility:
 import (
 	"fmt"
 	"math/rand/v2"
-	"slices"
-	"strings"
+	//"slices"
+	//"sort"
+	//"strings"
 )
 
 func main() {
-	manzu := createSuitSet("m")
-	souzu := createSuitSet("s")
-	pinzu := createSuitSet("p")
-	honors := createSuitSet("z")
-	suits := [][]string{manzu, souzu, pinzu, honors}
-
-	tileset := initTileSet(suits)
-
-	fmt.Println(manzu)
-	fmt.Println(souzu)
-	fmt.Println(pinzu)
-	fmt.Println(honors)
-
-	fmt.Println(tileset)
-	fmt.Println("Taking the red 5m...")
-	tileset["0m"]--
-	fmt.Println(tileset)
+	tileset2 := buildTileset()
+	fmt.Println("before draw: ", tileset2.tiles)
+	myHand2 := tileset2.generateHaipai()
+	fmt.Println("after draw: ", tileset2.tiles)
+	fmt.Println("My hand: ", myHand2)
 
 	roundRoll := rand.IntN(2)
 	if roundRoll == 0 {
@@ -92,46 +80,4 @@ func main() {
 		fmt.Println("Yakuman")
 		// roll for which yakuman, find yakuman compatibility
 	}
-}
-
-// use suitsets to create map of tile pool to track amount of each tile used
-func initTileSet(suitsets [][]string) map[string]int {
-	tiles := map[string]int{}
-
-	for i, _ := range suitsets {
-		for _, y := range suitsets[i] {
-			if strings.HasPrefix(y, "0") {
-				tiles[y] = 1
-			} else if strings.HasPrefix(y, "5") && y != "5z" {
-				tiles[y] = 3
-			} else {
-				tiles[y] = 4
-			}
-		}
-	}
-
-	return tiles
-}
-
-// build string slices to represent possible tile values
-func createSuitSet(suit string) []string {
-	suitset := []string{}
-	numsuits := []string{"m", "s", "p"}
-
-	switch {
-	case slices.Contains(numsuits, suit):
-		for i := range 10 {
-			tile := fmt.Sprintf("%d%s", i, suit)
-			suitset = append(suitset, tile)
-		}
-	case suit == "z":
-		for i := range 7 {
-			tile := fmt.Sprintf("%d%s", i+1, suit)
-			suitset = append(suitset, tile)
-		}
-	default:
-		panic("An invalid suit string was passed in")
-	}
-
-	return suitset
 }
