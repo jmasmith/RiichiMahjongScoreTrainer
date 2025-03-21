@@ -43,11 +43,17 @@ import (
 )
 
 func main() {
+	tileset := buildTileset()
 	tileset2 := buildTileset()
-	fmt.Println("before draw: ", tileset2.tiles)
-	myHand2 := tileset2.generateHaipai()
+
+	fmt.Println("before draw: ", tileset.tiles)
+	myHand2 := tileset.generateHaipai()
+	fmt.Println("after draw: ", tileset.tiles)
+	fmt.Println("My haipai: ", myHand2)
+
+	fmt.Println("Drawing a test hand...")
+	fmt.Println(tileset2.generateTestHand())
 	fmt.Println("after draw: ", tileset2.tiles)
-	fmt.Println("My hand: ", myHand2)
 
 	roundRoll := rand.IntN(2)
 	if roundRoll == 0 {

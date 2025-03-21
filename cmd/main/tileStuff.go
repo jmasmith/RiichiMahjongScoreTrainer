@@ -41,11 +41,160 @@ func buildTileset() Tileset {
 	}
 }
 
-// TODO: method to draw triplets from tileset
+func (ts Tileset) drawTriplet() []string {
+	redfiveroll := rand.IntN(4)
+	suitrollnum := rand.IntN(4)
+	suitroll := ts.suits[suitrollnum]
 
-// TODO: method to draw sequences from tileset
+	tilerollnum := rand.IntN(len(suitroll))
+	tileroll := suitroll[tilerollnum]
+	redfive := suitroll[0]
+	redfivecount := ts.tiles[redfive]
 
-// TODO: method to draw pair(s) from tileset
+	tilecount := ts.tiles[tileroll]
+
+	for tilecount < 3 {
+		if (strings.HasPrefix(tileroll, "5") && tileroll != "5z") && tilecount == 2 && redfivecount > 0 {
+			redfiveroll = 0
+			break
+		}
+		tilerollnum = rand.IntN(len(suitroll))
+		tileroll = suitroll[tilerollnum]
+		tilecount = ts.tiles[tileroll]
+	}
+
+	triplet := []string{tileroll, tileroll, tileroll}
+
+	if (strings.HasPrefix(tileroll, "5") && tileroll != "5z") && redfivecount > 0 && redfiveroll == 0 {
+		ts.tiles[tileroll] -= 2
+		ts.tiles[redfive]--
+		triplet = []string{redfive, tileroll, tileroll}
+	} else {
+		ts.tiles[tileroll] -= 3
+	}
+
+	return triplet
+}
+
+func (ts Tileset) drawSequence() []string {
+	var first string
+	var second string
+	var third string
+	redfiveroll := rand.IntN(4)
+	firstcount := 0
+	secondcount := 0
+	thirdcount := 0
+
+	for firstcount == 0 || secondcount == 0 || thirdcount == 0 {
+		suitrollnum := rand.IntN(3)
+		suitroll := ts.suits[suitrollnum]
+		tilerollnum := rand.IntN(7) + 2
+
+		first = suitroll[tilerollnum-1]
+		second = suitroll[tilerollnum]
+		third = suitroll[tilerollnum+1]
+
+		redfive := suitroll[0]
+		redfivecount := ts.tiles[redfive]
+
+		if tilerollnum == 5 && ((ts.tiles[second] < 1 && redfivecount > 0) || (redfivecount > 0 && redfiveroll == 0)) {
+			second = suitroll[0]
+		}
+		if tilerollnum-1 == 5 && ((ts.tiles[first] < 1 && redfivecount > 0) || (redfivecount > 0 && redfiveroll == 0)) {
+			first = suitroll[0]
+		}
+		if tilerollnum+1 == 5 && ((ts.tiles[third] < 1 && redfivecount > 0) || (redfivecount > 0 && redfiveroll == 0)) {
+			third = suitroll[0]
+		}
+
+		firstcount = ts.tiles[first]
+		secondcount = ts.tiles[second]
+		thirdcount = ts.tiles[third]
+	}
+	ts.tiles[first]--
+	ts.tiles[second]--
+	ts.tiles[third]--
+
+	sequence := []string{first, second, third}
+	return sequence
+}
+
+func (ts Tileset) drawPair() []string {
+	redfiveroll := rand.IntN(4)
+	suitrollnum := rand.IntN(4)
+	suitroll := ts.suits[suitrollnum]
+	tilerollnum := rand.IntN(len(suitroll))
+	tileroll := suitroll[tilerollnum]
+	tilecount := ts.tiles[tileroll]
+
+	redfive := suitroll[0]
+	redfivecount := ts.tiles[redfive]
+
+	for tilecount < 2 {
+		if (strings.HasPrefix(tileroll, "5") && tileroll != "5z") && tilecount == 1 && redfivecount > 0 {
+			redfiveroll = 0
+			break
+		}
+		tilerollnum = rand.IntN(len(suitroll))
+		tileroll = suitroll[tilerollnum]
+		tilecount = ts.tiles[tileroll]
+	}
+	pair := []string{tileroll, tileroll}
+
+	if (strings.HasPrefix(tileroll, "5") && tileroll != "5z") && redfivecount > 0 && redfiveroll == 0 {
+		ts.tiles[tileroll]--
+		ts.tiles[redfive]--
+		pair = []string{redfive, tileroll}
+	} else {
+		ts.tiles[tileroll] -= 2
+	}
+
+	return pair
+}
+
+func sortHand(hand []string) []string {
+	correctOrder := []string{"1", "2", "3", "4", "5", "0", "6", "7", "8", "9"}
+	sort.SliceStable(hand, func(i, j int) bool {
+		t1 := hand[i]
+		t2 := hand[j]
+		t1first := string(t1[0])
+		t2first := string(t2[0])
+
+		return slices.Index(correctOrder, t1first) < slices.Index(correctOrder, t2first)
+	})
+	// second sort by letter (suit)
+	sort.SliceStable(hand, func(i, j int) bool {
+		t1 := hand[i]
+		t2 := hand[j]
+		t1second := t1[1]
+		t2second := t2[1]
+
+		return (t1second < t2second)
+	})
+	return hand
+}
+
+func (ts Tileset) generateTestHand() []string {
+	hand := []string{}
+	numseqs := rand.IntN(5)
+	numtrips := 4 - numseqs
+	var sequence []string
+	var triplet []string
+
+	for range numseqs {
+		sequence = ts.drawSequence()
+		hand = slices.Concat(hand, sequence)
+	}
+	for range numtrips {
+		triplet = ts.drawTriplet()
+		hand = slices.Concat(hand, triplet)
+	}
+	pair := ts.drawPair()
+	hand = slices.Concat(hand, pair)
+
+	hand = sortHand(hand)
+	return hand
+}
 
 func (ts Tileset) generateHaipai() []string {
 	haipai := []string{}
@@ -66,24 +215,7 @@ func (ts Tileset) generateHaipai() []string {
 
 		haipai = append(haipai, tileroll)
 	}
-	correctOrder := []string{"1", "2", "3", "4", "5", "0", "6", "7", "8", "9"}
-	sort.SliceStable(haipai, func(i, j int) bool {
-		t1 := haipai[i]
-		t2 := haipai[j]
-		t1first := string(t1[0])
-		t2first := string(t2[0])
-
-		return slices.Index(correctOrder, t1first) < slices.Index(correctOrder, t2first)
-	})
-	// second sort by letter (suit)
-	sort.SliceStable(haipai, func(i, j int) bool {
-		t1 := haipai[i]
-		t2 := haipai[j]
-		t1second := t1[1]
-		t2second := t2[1]
-
-		return (t1second < t2second)
-	})
+	haipai = sortHand(haipai)
 
 	return haipai
 }
