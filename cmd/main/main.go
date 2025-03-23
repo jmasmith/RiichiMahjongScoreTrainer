@@ -37,23 +37,26 @@ Yaku compatibility:
 import (
 	"fmt"
 	"math/rand/v2"
-	//"slices"
+	"slices"
 	//"sort"
 	//"strings"
 )
 
 func main() {
 	tileset := buildTileset()
-	tileset2 := buildTileset()
 
-	fmt.Println("before draw: ", tileset.tiles)
-	myHand2 := tileset.generateHaipai()
+	hand := []string{}
+	var pair []string
+
+	for range 7 {
+		pair = tileset.drawPair(true, true, hand)
+
+		hand = slices.Concat(hand, pair)
+	}
+	hand = sortHand(hand)
+
+	fmt.Println("Yanyao chiitoi: ", hand)
 	fmt.Println("after draw: ", tileset.tiles)
-	fmt.Println("My haipai: ", myHand2)
-
-	fmt.Println("Drawing a test hand...")
-	fmt.Println(tileset2.generateTestHand())
-	fmt.Println("after draw: ", tileset2.tiles)
 
 	roundRoll := rand.IntN(2)
 	if roundRoll == 0 {
