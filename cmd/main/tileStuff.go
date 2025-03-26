@@ -2,6 +2,7 @@ package main
 
 import (
 	//"fmt"
+	"fmt"
 	"math/rand/v2"
 	"slices"
 	"sort"
@@ -41,6 +42,17 @@ func buildTileset() Tileset {
 	}
 }
 
+// TODO: function to draw specific tiles from tileset
+// (easier way to draw set sequences/triplets)
+
+// return tiles from group if group was invalid
+func (ts Tileset) returnTiles(tiles []string) {
+	fmt.Println("returning tiles...")
+	for _, tile := range tiles {
+		ts.tiles[tile]++
+	}
+}
+
 func (ts Tileset) drawTriplet() []string {
 	redfiveroll := rand.IntN(4)
 	suitrollnum := rand.IntN(4)
@@ -76,7 +88,7 @@ func (ts Tileset) drawTriplet() []string {
 	return triplet
 }
 
-func (ts Tileset) drawSequence() []string {
+func (ts Tileset) drawSequence(hand Hand) []string {
 	var first string
 	var second string
 	var third string
@@ -89,6 +101,11 @@ func (ts Tileset) drawSequence() []string {
 		suitrollnum := rand.IntN(3)
 		suitroll := ts.suits[suitrollnum]
 		tilerollnum := rand.IntN(7) + 2
+
+		// if tanyao, only roll simples sequences
+		if hand.isTanyao {
+			tilerollnum = rand.IntN(5) + 3
+		}
 
 		first = suitroll[tilerollnum-1]
 		second = suitroll[tilerollnum]
@@ -119,7 +136,7 @@ func (ts Tileset) drawSequence() []string {
 	return sequence
 }
 
-func (ts Tileset) drawPair(isTanyao bool, isChiitoi bool, hand []string) []string {
+func (ts Tileset) drawPair(hand Hand) []string {
 	redfiveroll := rand.IntN(4)
 	var redfive string
 	var redfivecount int
@@ -128,7 +145,7 @@ func (ts Tileset) drawPair(isTanyao bool, isChiitoi bool, hand []string) []strin
 	tilecount := 0
 
 	for tilecount < 2 {
-		if isTanyao {
+		if hand.isTanyao {
 			suitrollnum = rand.IntN(3)
 		} else {
 			suitrollnum = rand.IntN(4)
@@ -136,7 +153,7 @@ func (ts Tileset) drawPair(isTanyao bool, isChiitoi bool, hand []string) []strin
 		suitroll := ts.suits[suitrollnum]
 
 		tilerollnum := rand.IntN(len(suitroll))
-		if isTanyao && (tilerollnum < 2 || tilerollnum > 8) {
+		if hand.isTanyao && (tilerollnum < 2 || tilerollnum > 8) {
 			tilerollnum = rand.IntN(7) + 2
 		}
 
@@ -146,10 +163,10 @@ func (ts Tileset) drawPair(isTanyao bool, isChiitoi bool, hand []string) []strin
 		// if we already have a pair of this tile,
 		// and the hand is a chiitoi,
 		// try rolling again (goes to next iteration of loop)
-		if slices.Contains(hand, tileroll) && isChiitoi {
-			tilecount = 0
-			continue
-		}
+		// if slices.Contains(hand, tileroll) && isChiitoi {
+		// 	tilecount = 0
+		// 	continue
+		// }
 
 		redfive = suitroll[0]
 		redfivecount = ts.tiles[redfive]
@@ -194,27 +211,27 @@ func sortHand(hand []string) []string {
 	return hand
 }
 
-func (ts Tileset) generateTestHand() []string {
-	hand := []string{}
-	numseqs := rand.IntN(5)
-	numtrips := 4 - numseqs
-	var sequence []string
-	var triplet []string
+// func (ts Tileset) generateTestHand() []string {
+// 	hand := []string{}
+// 	numseqs := rand.IntN(5)
+// 	numtrips := 4 - numseqs
+// 	var sequence []string
+// 	var triplet []string
 
-	for range numseqs {
-		sequence = ts.drawSequence()
-		hand = slices.Concat(hand, sequence)
-	}
-	for range numtrips {
-		triplet = ts.drawTriplet()
-		hand = slices.Concat(hand, triplet)
-	}
-	pair := ts.drawPair(false, false, hand)
-	hand = slices.Concat(hand, pair)
+// 	for range numseqs {
+// 		sequence = ts.drawSequence()
+// 		hand = slices.Concat(hand, sequence)
+// 	}
+// 	for range numtrips {
+// 		triplet = ts.drawTriplet()
+// 		hand = slices.Concat(hand, triplet)
+// 	}
+// 	pair := ts.drawPair(false, false, hand)
+// 	hand = slices.Concat(hand, pair)
 
-	hand = sortHand(hand)
-	return hand
-}
+// 	hand = sortHand(hand)
+// 	return hand
+// }
 
 func (ts Tileset) generateHaipai() []string {
 	haipai := []string{}

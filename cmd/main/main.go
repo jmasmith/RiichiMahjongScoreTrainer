@@ -37,26 +37,103 @@ Yaku compatibility:
 import (
 	"fmt"
 	"math/rand/v2"
+	"reflect"
 	"slices"
 	//"sort"
 	//"strings"
 )
 
+type Hand struct {
+	sequences    [][]string
+	triplets     [][]string
+	pairs        [][]string
+	fullHand     []string
+	closedGroups [][]string
+	openGroups   [][]string
+	isRiichi     bool
+	agari        string
+	isClosed     bool
+	hanValue     int
+	fuValue      int
+	isIppatsu    bool
+	isTanyao     bool
+	isChiitoi    bool
+	isPinfu      bool
+	hasIipeikou  bool
+	hasYakuhai   bool
+	isToitoi     bool
+	hasItsuu     bool
+	hasSSJ       bool
+	hasSSK       bool
+	hasShosangen bool
+	isHonroutou  bool
+	hasSanankou  bool
+	isHonitsu    bool
+	flushSuit    int
+	isChanta     bool
+	isJunchan    bool
+	isRyanpeikou bool
+}
+
+func newHand() Hand {
+	return Hand{}
+}
+
+func (h *Hand) testGenerateHand(ts Tileset) {
+	h.isTanyao = true
+	h.isPinfu = true
+	h.isClosed = true
+	h.isChiitoi = false
+	h.sequences = [][]string{}
+	h.pairs = [][]string{}
+	h.fullHand = []string{}
+	h.closedGroups = [][]string{}
+	var tilegroup []string
+
+	//draw 4 sequences, make sure there are no dupes
+OUTER:
+	for len(h.sequences) < 4 {
+		tilegroup = ts.drawSequence(*h)
+
+		//check for dupes
+		for _, group := range h.sequences {
+			if reflect.DeepEqual(tilegroup, group) {
+				ts.returnTiles(tilegroup)
+				continue OUTER
+			}
+		}
+
+		// append to sequences 2d slice
+		h.sequences = append(h.sequences, tilegroup)
+		h.closedGroups = append(h.closedGroups, tilegroup)
+		h.fullHand = slices.Concat(h.fullHand, tilegroup)
+	}
+
+	tilegroup = ts.drawPair(*h)
+	h.pairs = append(h.pairs, tilegroup)
+	h.closedGroups = append(h.closedGroups, tilegroup)
+	h.fullHand = slices.Concat(h.fullHand, tilegroup)
+
+	h.fullHand = sortHand(h.fullHand)
+}
+
 func main() {
 	tileset := buildTileset()
+	newhand := newHand()
 
-	hand := []string{}
-	var pair []string
+	newhand.testGenerateHand(tileset)
 
-	for range 7 {
-		pair = tileset.drawPair(true, true, hand)
-
-		hand = slices.Concat(hand, pair)
-	}
-	hand = sortHand(hand)
-
-	fmt.Println("Yanyao chiitoi: ", hand)
+	fmt.Println("Tanyao pinfu, hopefully: ", newhand.fullHand)
 	fmt.Println("after draw: ", tileset.tiles)
+
+	// for range 7 {
+	// 	pair = tileset.drawPair(false, true, hand)
+
+	// 	hand = slices.Concat(hand, pair)
+	// }
+	// hand = sortHand(hand)
+
+	// fmt.Println("Yanyao chiitoi: ", hand)
 
 	roundRoll := rand.IntN(2)
 	if roundRoll == 0 {
